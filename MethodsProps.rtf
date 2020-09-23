@@ -1,0 +1,258 @@
+{\rtf1\ansi\ansicpg1252\deff0\deflang1033\deflangfe1033{\fonttbl{\f0\fswiss\fprq2\fcharset0 Arial;}}
+{\colortbl ;\red0\green0\blue0;\red128\green0\blue128;\red51\green51\blue153;}
+\viewkind4\uc1\pard\nowidctlpar\tx720\cf1\f0\fs20 The collection class is one-based and value oriented, not zero-based, not pointer oriented. This means if a collection item contains an object (class, control, etc), that object's reference count is incremented and the object remains instantiated within the collection until the item is removed from the collection or set to Nothing.  \par
+\par
+Keys are not required but are highly recommended because indexes are dynamic and can change. At a minimum, keys should be applied to parent nodes. Keys can be numeric, non-numeric, case-sensive or case insensitive. The key of vbNullString is reserved and cannot be used. The numerical key of zero is also reserved and cannot be used.  Keys are item properties that can be changed when desired; but can never be duplicated. \par
+\par
+Indexes are dynamic and should never be cached. They can change whenever an item is deleted or when a collection is loaded from a cached byte array (See LoadCollection and SaveCollection methods).  If keys are not used, then you should enumerate the items of the collection using the FirstChild, LastChild, FirstSibling, NextSibling PreviousSibling, LastSibling, and SiblingOffsetIndex methods.  The end of the sibling chain occurs whenever one of those methods return zero.\par
+\par
+\ul For Example. Looping through the children of Node, keyed with "n123"\ulnone\par
+Dim childIndex As Long\par
+childIndex = myCol.FirstChild("n123")  \lquote  get first child of this node\par
+Do Until childIndex = 0\par
+\tab ' do something with myCol.Item(childIndex)\par
+\tab childIndex = myCol.NextSilbing(childIndex) \lquote  get child\rquote s next sibling\par
+Loop\par
+\par
+\ul For Example. Looping through the top-level nodes of your collection\ulnone\par
+Dim nodeIndex As Long\par
+nodeIndex = myCol.FirstSibling(0)  \lquote  get root\rquote s first sibling or collection\rquote s first child\par
+Do Until nodeIndex = 0\par
+\tab ' do something with myCol.Item(nodeIndex)\par
+\tab nodeIndex = myCol.NextSilbing(nodeIndex)  \lquote  get node\rquote s next sibling\par
+Loop\par
+\par
+\ul For Example. Walking the collection, in order, starting with the first node (recursive loop)\ulnone\par
+\cf0 ...\par
+    Call NodeEnum(myCol.FirstSibling(0))\par
+....\par
+\par
+Private Sub NodeEnum(ByVal ThisNode As Long)\par
+\tab Do Until ThisNode = 0\par
+\tab       Debug.Print myCol.PreviousSibling(ThisNode),  ThisNode, myCol.NextSibling(ThisNode)\par
+\tab       If myCol.HasChildren(ThisNode) = True Then \par
+\tab\tab Call NodeEnum(myCol.FirstChild(ThisNode))\par
+\tab       End If\par
+\tab       ThisNode = myCol.NextSibling(ThisNode)\par
+\tab Loop\par
+End Sub\par
+\par
+\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\ul\b COLLECTION ITEM PROPERTIES AND METHODS\ulnone\b0\par
+\par
+\pard\nowidctlpar\tx720 About the \cf2 KeyIndex\cf0  parameters used below.  Keys can be both numeric and non-numeric.  The parameter \ul variable type\ulnone  determines if the parameter references a string Key value or a numerical Index value\par
+\par
+\ul Examples of Key Referencing\ulnone . Each of the three examples will always be interpreted as \ul Keys\ulnone  vs Indexes:\par
+\tab Dim strKey As String, Index As Long\tab\par
+\tab strKey = "98" : Index = 98\par
+\tab Debug.Print myCol.Item(strKey).Item,  myCol.Item("98").Item,  myCol.Item(CStr(Index)).Item\par
+\par
+\ul Example of Index Referencing\ulnone . Each of the three examples will always be interpreted as \ul Indexes\ulnone  vs Keys\par
+\tab Dim strKey As String, Index As Long\tab\par
+\tab Index= 123 : strKey = "123"\par
+\tab Debug.Print myCol.Item(Index).Item,  myCol.Item(123).Item,  myCol.Item(CLng(strKey)).Item\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\par
+\b AddItem\b0 (\cf2 Item\cf0 , \cf2 Key\cf0 , \cf2 RelativeKeyIndex\cf0 , \cf2 Relationship\cf0 ) :: \{Function\}. Adds a new Item to the collection\par
+\tab [Item](Required). Any object/variable that can be contained in a Variant\par
+\tab [Key] (Optional). A unique Key for the item. If the Key is duplicated, then an error will result\par
+\tab [RelativeKeyIndex] \{Optional\}. The item index or key value of the parent/sibling this new item will be related to.\par
+\tab\tab Default is the last root item in the collection\par
+\tab [Relationship] (Optional). One of the following values. Default is relSilbingNext\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\tx1260\tab\tab relChildFirst. The new Item will become the first child of the item identified by RelativeKeyIndex\par
+\tab\tab relChildLast. The new Item will become the last child of the item identified by RelativeKeyIndex\par
+\tab\tab relSiblingFirst. The new item will be the first child of the Parent to the item identified by RelativeKeyIndex\par
+\tab\tab relSiblingLast. The new item will be the last child of the Parent to the item identified by RelativeKeyIndex\par
+\tab\tab relSiblingNext. The new item will be the next sibling of the item identified by RelativeKeyIndex\par
+\tab\tab relSiblingPrevious. The new item will be the previous sibling of the item identified by RelativeKeyIndex\par
+\tab\tab '  Add and also sort item among children of item identified by RelativeKeyIndex\par
+\tab\tab '  Note: If the Item contain arrays or objects, the following relationships are changed to relLastChild\par
+\tab\tab relChildSortedAsText_Asc. Sorts child using non case-senstiive comnparisons, ascending order\par
+\tab\tab relChildSortedAsText_Desc . Sorts child using non case-senstiive comnparisons, descending order\par
+\tab\tab relChildSortedBinaryText_Asc. Sorts child using case-senstiive comnparisons, ascending order\par
+\tab\tab relChildSortedBinaryText_Desc . Sorts child using case-senstiive comnparisons, descending order\par
+\tab\tab relChildSortedAsNumeric_Asc. Sorts child using numerical value comnparisons, ascending order\par
+\tab\tab relChildSortedAsNumeric_Desc . Sorts child using numerical value comnparisons, descending order\par
+\pard\nowidctlpar\fi-1260\li1260\tx720\tx1260\tab Return value is the item index of the newly added item.  See Item property to change the item's value and MoveItem to relocate an item from one node to another\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\b\par
+ClearKeys\b0 (\cf3 KeyIndex, Level\cf0 ) :: \{Function\}. Clears all keys for all collection items\par
+\tab [KeyIndex](Optional). Either the Key or Item Index of the level you wish keys to be cleared at\par
+\tab\tab Supplying zero or vbNullString for KeyIndex uses the root level\par
+\tab [Level](Optional). One of the following, default is brchAllLevels\par
+\pard\nowidctlpar\fi-2430\li2430\tx720\tx1260\tab\tab brchAllLevels.  All siblings/decsendants of all nodes within the branch identified by KeyIndex will be cleared\par
+\pard\nowidctlpar\fi-2340\li2340\tx720\tx1260\tab\tab brchChildren. Only the immediate children of item identified by KeyIndex will be cleared\par
+\tab\tab brchSiblings. Only the siblings within the branch of item identified by KeyIndex will be cleared\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\par
+\pard\nowidctlpar\fi-720\li720\tx720\b CollectionBufferLimit\b0 (\cf3 Value\cf0 ) :: \{Property\}(R/W). Returns or sets the amount of empty collection items to maintain. Extra buffer items help prevent constant Redimensioning the collection when items are added or deleted. Default is 10. Setting this buffer to zero will trim the current collection, removing an excess buffered items.\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\par
+\b ChildCount\b0 (\cf3 ParentKeyIndex\cf0 ) :: \{Function\}. Returns the number of children a node has\par
+\tab [ParentKeyIndex](Required). Either the Key or Item Index of a Parent node. Supplying zero or vbNullString for ParentKeyIndex uses the root level\par
+\par
+\b FirstChild\b0 (\cf3 ParentKeyIndex\cf0 ) :: \{Function\}. Returns the numerical Index of the node's first child node\par
+\tab [ParentKeyIndex](Required). Either the Key or Item Index of the node's Parent item.  Supplying zero or vbNullString for KeyIndex returns collection's first main level node\par
+\par
+\b FirstSibling\b0 (\cf2 KeyIndex\cf0 ) :: \{Function\}. Returns the numerical Index of the node's first sibling\par
+\tab [KeyIndex](Required). Either the Key or Item Index of the item. Supplying zero or vbNullString for KeyIndex returns collection's first main level node\par
+\par
+\b HasChildren\b0 (\cf3 Parent\cf2 KeyIndex\cf0 ) :: \{Property\}(Read Only). Returns boolean whether or not the node has any child nodes.\par
+\tab [ParentKeyIndex](Required). Either the Key or Item Index a parent node. Supplying zero or vbNullString for KeyIndex always returns True if collection has any items at all.\par
+\tab Note. This Property is much faster than checking if ChildCount(nodeIndex) = 0\par
+\par
+\pard\nowidctlpar\fi-720\li720\tx720\b IndexFromKeyIndex\b0 (\cf2 Index\cf0 ) :: \{Function\}. Returns an Item index from a key index. When keys are set where they double as a sorting order, you can return an Item index from a key index (useful for flat-type collections)\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\tab [Index](Required). A key\rquote s Index. The retrieve number of keys in use, Call IndexFromKeyIndex(0).\par
+\tab Example: Should your keys double as a sorted list, this is how you can return your items in that sorted order:\par
+\tab For kIndex = 1 to myCol.IndexFromKeyIndex(0)\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\tx1080\tab\tab Debug.Print myCol.Item( myCol.IndexFromKeyIndex(kIndex) )\par
+\tab Next\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\b\par
+\pard\nowidctlpar\fi-720\li720\tx720 IsAncestorOf\b0 (\cf2 AncestorKeyIndex, ChildKeyIndex\cf0 ) :: \{Function\}. Returns whether or not the node identified by ChildKeyIndex is a descendant of the node identified by AncestorKeyIndex\par
+\tab [AncestorKeyIndex](Required). Either the Key or Item Index.\par
+\tab [ChildKeyIndex](Required). Either the Key or Item Index.\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\par
+\b Item\b0 (\cf2 KeyIndex\cf0 ) :: \{Property\}(R/W). Returns or Sets the value of the collection item.\par
+\tab [KeyIndex](Required). Either the Key or Item Index of the item.\par
+\pard\nowidctlpar\fi-720\li720\tx720\tab When assigning an object as a value, use the keyword Set. The value can be anything that can be assigned to a Variant variable, including arrays.\par
+\tab\ul Sample Item referencing\ulnone :\par
+\tab Non-objects are referenced simply as myCol.Item(KeyIndex)\par
+\tab Arrayed non-object items are referenced as myCol.Item(KeyIndex)(ArrayIndex)\par
+\tab Object properties are referenced as myCol.Item(KeyIndex).PropertyName\par
+\tab Arrayed object properties are referenced as myCol(KeyIndex)(ArrayIndex).PropertyName\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\b\par
+ItemCount\b0  :: \{Property\}(Read Only). Returns tne number of items contained in the entire collection\par
+\par
+\b Key\b0 (\cf2 KeyIndex\cf0 ) :: \{Property\}(R/W). Returns or sets the key for a specific collection item\par
+\tab [KeyIndex](Required). Either the Key or Item Index of the item. \par
+\tab Return value is the string Key value if the item does have a key\par
+\tab Examples:  myCol.Key("oldKey") = "newKey" or  Debug.Print myCol.Key(123)\par
+\par
+\b KeyExists\b0 (\cf2 Key\cf0 ) :: \{Function\}. Returns True if the Key does exist in the collection, else returns False\par
+\tab [Key](Required). Must be a valid string Key value. Supplyingt vbNullString removes the current key for the node\par
+\par
+\pard\nowidctlpar\fi-1260\li1260\tx720\tx1260\b KeysCaseSensitive \b0 :: \{Property\}(R/W). Returns or sets whether or not keys are case sensitive.\par
+\pard\nowidctlpar\fi-720\li720\tx720\tx1260\tab This property can only be set when a collection has no existing keys. Once the collection consists of at least one key, this property is read only.\par
+\pard\nowidctlpar\fi-1260\li1260\tx720\tx1260\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\b KeyToIndex\b0 (\cf3 Key\cf0 ) :: \{Function\}. Returns the Index of the item associated with the Key\par
+\tab [Key](Required). Must be a valid string Key value, cannot be vbNullString or zero\par
+\par
+\b LastChild\b0 (\cf3 ParentKeyIndex\cf0 ) :: \{Function\}. Returns the numerical Index of the node's last child node\par
+\tab [ParentKeyIndex](Required). Either the Key or Item Index of the node's Parent item. Supplying zero or vbNullString for KeyIndex returns collection's last main level node\par
+\par
+\b LastSibling\b0 (\cf2 KeyIndex\cf0 ) :: \{Function\}. Returns the numerical Index of the node's last sibling\par
+\tab [KeyIndex](Required). Either the Key or Item Index of the item.  Supplying zero or vbNullString for KeyIndex returns collection's last main level node\par
+\par
+\pard\nowidctlpar\fi-720\li720\tx720\b LoadCollection\b0 (\cf2 CollectionBytes\cf0 ) :: \{Function\}. Creates a collection from the passed byte array. \par
+\pard\nowidctlpar\fi-1800\li1800\tx720\tab [\cf2 CollectionBytes\cf0 ](Required). Byte array created by a call to SaveCollection.\par
+\tab Note 1) See Public Events at bottom of document\par
+\tab Note 2) If used, you must declare the collection class using \cf2 WithEvents\par
+\cf1\tab Note 3) See SaveColllection\cf0\par
+\par
+\pard\nowidctlpar\fi-1260\li1260\tx720\tx1260\b MoveChildren\b0 (\cf2 ParentKeyIndex\cf0 , \cf2 TargetKeyIndex\cf0 , \cf2 Relationship\cf0 ) :: \{Function\}. Moves all child nodes from from one node to another.\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\tab [ParentKeyIndex]. Either the Key or Item Index of the parent item whose children will be moved\par
+\tab [TargetKeyIndex] \{Required\}. The item index or key value of the parent/sibling the child nodes will be related to.\par
+\tab [Relationship] \{Optional\}. One of the following values. Default is relSilbingNext\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\tx1260\tab\tab relChildFirst. The new Item will become the first child of the item identified by RelativeKeyIndex\par
+\tab\tab relChildLast. The new Item will become the last child of the item identified by RelativeKeyIndex\par
+\tab\tab relSiblingFirst. The new item will be the first child of the Parent to the item identified by RelativeKeyIndex\par
+\tab\tab relSiblingLast. The new item will be the last child of the Parent to the item identified by RelativeKeyIndex\par
+\tab\tab relSiblingNext. The new item will be the next sibling of the item identified by RelativeKeyIndex\par
+\tab\tab relSiblingPrevious. The new item will be the previous sibling of the item identified by RelativeKeyIndex\par
+\tab\tab '  Move as new children and also sort children among children of item identified by RelativeKeyIndex\par
+\tab\tab '  Note: If the Items contain arrays or objects, the following relationships are changed to relLastChild\par
+\tab\tab relChildSortedAsText_Asc. Sorts children using non case-senstiive comnparisons, ascending order\par
+\tab\tab relChildSortedAsText_Desc . Sorts children using non case-senstiive comnparisons, descending order\par
+\tab\tab relChildSortedBinaryText_Asc. Sorts children using case-senstiive comnparisons, ascending order\par
+\tab\tab relChildSortedBinaryText_Desc . Sorts children using case-senstiive comnparisons, descending order\par
+\tab\tab relChildSortedAsNumeric_Asc. Sorts children using numerical value comnparisons, ascending order\par
+\tab\tab relChildSortedAsNumeric_Desc . Sorts children using numerical value comnparisons, descending order\par
+\pard\nowidctlpar\fi-1260\li1260\tx720\tab Return value is True if the move was successful.  If the moved children also have any child nodes, those child nodes are moved too.\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\par
+\pard\nowidctlpar\fi-1260\li1260\tx720\tx1260\b MoveItem\b0 (\cf2 KeyIndex\cf0 , \cf2 TargetKeyIndex\cf0 , \cf2 Relationship, NewKey\cf0 ) :: \{Function\}. Moves node from from one node to another.\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\tab [KeyIndex]. Either the Key or Item Index of the item to be moved\par
+\tab [TargetKeyIndex] \{Required\}. The item index or key value of the parent/sibling the moved node will be related to.\par
+\tab [Relationship] \{Optional\}. One of the following values. Default is relSilbingNext\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\tx1260\tab\tab relChildFirst. The new Item will become the first child of the item identified by RelativeKeyIndex\par
+\tab\tab relChildLast. The new Item will become the last child of the item identified by RelativeKeyIndex\par
+\tab\tab relSiblingFirst. The new item will be the first child of the Parent to the item identified by RelativeKeyIndex\par
+\tab\tab relSiblingLast. The new item will be the last child of the Parent to the item identified by RelativeKeyIndex\par
+\tab\tab relSiblingNext. The new item will be the next sibling of the item identified by RelativeKeyIndex\par
+\tab\tab relSiblingPrevious. The new item will be the previous sibling of the item identified by RelativeKeyIndex\par
+\tab\tab '  Move as new child and also sort item among children of item identified by RelativeKeyIndex\par
+\tab\tab '  Note: If the Item contain arrays or objects, the following relationships are changed to relLastChild\par
+\tab\tab relChildSortedAsText_Asc. Sorts child using non case-senstiive comnparisons, ascending order\par
+\tab\tab relChildSortedAsText_Desc . Sorts child using non case-senstiive comnparisons, descending order\par
+\tab\tab relChildSortedBinaryText_Asc. Sorts child using case-senstiive comnparisons, ascending order\par
+\tab\tab relChildSortedBinaryText_Desc . Sorts child using case-senstiive comnparisons, descending order\par
+\tab\tab relChildSortedAsNumeric_Asc. Sorts child using numerical value comnparisons, ascending order\par
+\tab\tab relChildSortedAsNumeric_Desc . Sorts child using numerical value comnparisons, descending order\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\tab [NewKey]\{Optional\}. If provided the moved item will be assigned the NewKey\par
+\pard\nowidctlpar\fi-1260\li1260\tx720\tab Return value is True if the move was successful.  If the moved node has any child nodes, those child nodes are moved too.\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\par
+\b NextSibling\b0 (\cf2 KeyIndex\cf0 ) :: \{Function\}. Returns the numerical Index of the node's  next sibling\par
+\tab [KeyIndex](Required). Either the Key or Item Index of the item. Supplying zero or vbNullString for KeyIndex returns collection's last main level node\par
+\tab Note. If function returns zero, then there are no older siblings\par
+\par
+\b Parent\b0 (\cf2 KeyIndex\cf0 ) :: \{Property\}(R/W). Returns or sets the parent Index for a specific collection item.\par
+\tab [KeyIndex](Required). Either the Key or Item Index of the item.\par
+\tab Note. Setting the Parent is same as calling MoveItem(KeyIndex, NewParentIndex, relChildLast)\par
+\par
+\b ParentRootNode\b0 (\cf2 KeyIndex\cf0 ) :: \{Function\}. Returns the index of the top most node related to KeyIndex\par
+\tab [KeyIndex](Required). Either the Key or Item Index of a node, cannot be zero or vbNullString \par
+\par
+\b PreviousSibling\b0 (\cf2 KeyIndex\cf0 ) :: \{Function\}. Returns the numerical Index of the node's previous sibling\par
+\tab [KeyIndex](Required). Either the Key or Item Index of the item.  Supplying zero or vbNullString for KeyIndex returns collection's first main level node\par
+\tab Note. If function returns zero, then there are no younger siblings\par
+\par
+\b RandomKey\b0  :: \{Function\}. Returns a 16 character random key that is unique to the collection\par
+\par
+\b RemoveChildren\b0 (\cf2 ParentKeyIndex\cf0 ) :: \{Function\}. Permanently deletes all child nodes from the collection\par
+\tab [ParentKeyIndex]. Either the Key or Item Index of the Parent whose children are to be deleted\par
+\pard\nowidctlpar\fi-1260\li1260\tx720\tab Return value is True if the deletion was successful. All descendants of the child nodes are also deleted.\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\tab\par
+\b RemoveItem\b0 (\cf2 KeyIndex\cf0 ) :: \{Function\}. Permanently deletes an item from the collection.\par
+\tab [KeyIndex]. Either the Key or Item Index of the item to be deleted\par
+\pard\nowidctlpar\fi-1260\li1260\tx720\tab Return value is True if the deletion was successful. All descendants are also deleted.\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\tab\par
+\pard\nowidctlpar\fi-720\li720\tx720\b SaveCollection\b0 (\cf2 CollectionBytes\cf0 ) :: \{Function\}. Returns a byte array representation of the collection.  \par
+\pard\nowidctlpar\fi-1800\li1800\tx720\tab [CollectionBytes](Required). Byte array should be used with LoadCollection method.\par
+\tab Note 1) See Public Events at bottom of document\par
+\tab Note 2) If used, you must declare the collection class using \cf2 WithEvents\par
+\cf1\tab Note 3) See LoadColllection\par
+\pard\nowidctlpar\fi-1440\li1440\tx720\tab Note 4) Saving Arrays. With the exception of arrays of Variants and Objects, the class can save arrays of all variable types.  These arrays can have no more than 10 dimensions.  Any arrays with more than 10 dimensions will not be saved.\cf0\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\par
+\pard\nowidctlpar\fi-720\li720\tx720\b SiblingOffsetIndex\b0 (\cf2 ParentKeyIndex, Offset, ReverseOffset\cf0 ) :: \{Function\}. Returns an index of a sibling n number of siblings from the first or last sibling contained by the item identified by ParentKeyIndex.  \par
+\pard\nowidctlpar\fi-1800\li1800\tx720\tab [ParentKeyIndex](Required). Either the Key or Item Index of the Parent containing the siblings. Supplying zero or vbNullString for ParentKeyIndex uses the root level\par
+\tab [Offset](Optional). Number of siblings from the first or last sibling whose index you want returned. Positive values.\par
+\tab [ReverseOffset](Optional). If true, Offset is counted from the last sibling else from the first sibling\par
+\pard\nowidctlpar\fi-720\li720\tx720\b\par
+SortCollection\b0 (\cf2 KeyIndex, Level, TextSorAs, Ascending, ObjectPublicProperty\cf0 ) :: \{Function\}. Sorts the collection\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\tab [KeyIndex](Required). Either the Key or Item Index of a node whose children or siblings are to be sorted \par
+\tab [Level](Optional). One of the following, default is brchAllLevels\par
+\pard\nowidctlpar\fi-2430\li2430\tx720\tx1260\tab\tab brchAllLevels.  All siblings/decsendants of all nodes within the branch identified by KeyIndex will be sorted\par
+\pard\nowidctlpar\fi-2340\li2340\tx720\tx1260\tab\tab brchChildren. Only the immediate children of item identified by KeyIndex will be sorted\par
+\tab\tab brchSiblings. Only the siblings within the branch of item identified by KeyIndex will be sorted\par
+\pard\nowidctlpar\fi-2790\li2790\tx720\tab [TextSortAs](Optional). One of the following, default is srtTextText.  This parameter is only used if the branch to be sorted contains string values.\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\tx1260\tab\tab srtAsNumeric. Compares the numerical value of the collection items.\par
+\tab\tab srtTextBinary.  Case-sensitive comparisons of collection items\par
+\tab\tab srtTextText. Non case-sensitive comparsions of collection items\par
+\pard\nowidctlpar\fi-2700\li1800\tx720\tab [Ascending](Optional). If True, sort order is ascending, else it is descending order\par
+\pard\nowidctlpar\fi-3240\li1440\tx720\tab [ObjectPublicProperty](Optional). The name of a public property that exists for objects contained in the collection. The value returned by this property name is used for sorting. Default is \ldblquote Name\rdblquote  property\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\tab Note 1)  Items that contain arrays will not be sorted\par
+\tab Note 2)  Branches that contain both objects and other variable types will not be sorted\par
+\tab Note 3)  Branches that contain a mix of variable types that cannot be compared will not be sorted.\par
+\par
+\par
+\ul\b COLLECTION PUBLIC EVENTS\ulnone\b0\par
+\par
+\pard\nowidctlpar\fi-360\li360\tx720 If your collection contains objects or arrays containing objects, then you will need to declare your collection using the WithEvents keyword if the class will be used to save the collection or load a previously saved collection.  During the save routine, when the collection comes across an item containing a class/object, the SerializeObject event will be triggered.  It is your responsibility to convert the collection item into a single or multi-dimensional \ul byte\ulnone  array, encoded any way that is meaningful to you\par
+\pard\nowidctlpar\fi-720\li720\tx720\b\par
+\pard\nowidctlpar\fi-360\li360\tx720\b0 Additionally, if the collection is to be used to load a previously saved collection, the same restrictions apply.  The difference is that when the collection comes across classes/objects, the SerializeObject event will be triggered and the previously encoded, serialized byte array will be passed back to you for deserialization.\b\par
+\pard\nowidctlpar\fi-720\li720\tx720\par
+SerializeObject\b0 (\cf2 Serialize, collectioObject, DataArray, ObjectID\cf0 ) :: \{Event\}. Called when saving or loading a collection when a collection item contains an object\par
+\pard\nowidctlpar\fi-1800\li1800\tx720\tab [Serialize]. When True, Must return a byte array representing the object (serializing)\par
+\tab\tab When False, Must create the object from the passed bytes (deserializing)\par
+\tab [collectionObject]. When serializing, this will contain the object to be serialized. When deserializing, you must set this object to the restored/deserialized object\par
+\tab [DataArray]. The byte array to be returned from serialization or to be used for deserialization\par
+\tab [ObjectID]. Any string value you wish to identify what class or type of object this is. When deserializing, the same ObjectID will be passed back to you. Useful should you be collecting multiple object types.\par
+\par
+\pard\nowidctlpar\fi-720\li720\tx720\par
+}
+ 
